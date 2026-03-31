@@ -1,0 +1,5 @@
+/futuresd
+/bin/
+*.exe
+.env
+.env.local
