@@ -1,0 +1,15 @@
+services:
+  futuresd:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      LISTEN_ADDR: ":8090"
+      APEX_FUTURES_API_KEY: "${APEX_FUTURES_API_KEY}"
+      APEX_FUTURES_API_SECRET: "${APEX_FUTURES_API_SECRET}"
+      APEX_FUTURES_SANDBOX: "true"
+      IBKR_FUTURES_ENABLED: "${IBKR_FUTURES_ENABLED:-false}"
+      IBKR_FUTURES_PAPER: "${IBKR_FUTURES_PAPER:-true}"
+    restart: unless-stopped
