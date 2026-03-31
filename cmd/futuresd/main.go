@@ -4,17 +4,17 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/luxfi/futures/pkg/provider"
 	"github.com/luxfi/futures/pkg/provider/envconfig"
@@ -22,9 +22,6 @@ import (
 )
 
 func main() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
 	addr := os.Getenv("LISTEN_ADDR")
 	if addr == "" {
 		addr = ":8090"
@@ -33,7 +30,7 @@ func main() {
 	reg := provider.NewRegistry()
 	envconfig.Register(reg)
 
-	log.Info().Strs("providers", reg.List()).Msg("futures providers registered")
+	slog.Info("futuresd starting", "providers", reg.List(), "addr", addr)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -41,7 +38,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   corsOriginsFromEnv(),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		ExposedHeaders:   []string{"Link"},
@@ -78,20 +75,21 @@ func main() {
 	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		log.Info().Str("addr", addr).Msg("starting futuresd")
+		slog.Info("starting futuresd", "addr", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal().Err(err).Msg("server failed")
+			slog.Error("server failed", "err", err)
+			os.Exit(1)
 		}
 	}()
 
 	<-done
-	log.Info().Msg("shutting down")
+	slog.Info("shutting down")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Error().Err(err).Msg("shutdown error")
+		slog.Error("shutdown error", "err", err)
 	}
 }
 
@@ -219,6 +217,17 @@ func marginHandler(reg *provider.Registry) http.HandlerFunc {
 			return
 		}
 		writeJSON(w, http.StatusOK, margin)
+	}
+}
+
+func corsOriginsFromEnv() []string {
+	if v := os.Getenv("CORS_ALLOWED_ORIGINS"); v != "" {
+		return strings.Split(v, ",")
+	}
+	return []string{
+		"https://lux.exchange",
+		"https://zoo.exchange",
+		"https://pars.market",
 	}
 }
 
