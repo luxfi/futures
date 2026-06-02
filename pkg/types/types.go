@@ -11,8 +11,8 @@ type Order struct {
 	AccountID      string     `json:"account_id"`
 	Symbol         string     `json:"symbol"`
 	Qty            string     `json:"qty"`
-	Side           string     `json:"side"`     // buy, sell
-	Type           string     `json:"type"`     // market, limit, stop, stop_limit
+	Side           string     `json:"side"` // buy, sell
+	Type           string     `json:"type"` // market, limit, stop, stop_limit
 	TimeInForce    string     `json:"time_in_force"`
 	LimitPrice     string     `json:"limit_price,omitempty"`
 	StopPrice      string     `json:"stop_price,omitempty"`
@@ -61,7 +61,7 @@ type FuturesQuote struct {
 // CreateFuturesOrderRequest is the request to place a futures order.
 type CreateFuturesOrderRequest struct {
 	Symbol      string `json:"symbol"`
-	Side        string `json:"side"`       // buy, sell
+	Side        string `json:"side"` // buy, sell
 	Qty         string `json:"qty"`
 	OrderType   string `json:"order_type"` // market, limit, stop, stop_limit
 	LimitPrice  string `json:"limit_price,omitempty"`
