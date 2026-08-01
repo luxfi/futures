@@ -1,4 +1,5 @@
-FROM golang:1.26.4-alpine AS build
+FROM golang:1.26.5-alpine AS build
+ENV GOTOOLCHAIN=auto
 WORKDIR /src
 RUN apk add --no-cache ca-certificates tzdata \
     && echo 'nonroot:x:65532:65532:nonroot:/home/nonroot:/sbin/nologin' >> /etc/passwd \
